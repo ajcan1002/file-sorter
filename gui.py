@@ -6,6 +6,7 @@ import configparser
 class GUIframe():
     #self.values = self.tree.item(self.tree.selection())["values"]
 
+    #get values from config and preset widgets accordingly
     def ingest(self):
         if(self.settings["base_path"] == ""):
             self.checker.deselect()
@@ -29,10 +30,12 @@ class GUIframe():
         else:
             self.loopcheck.deselect()
             self.loopInterval.config(state="disabled")
-
+            
+        #insert existing rules into treebox
         for rule in self.rules:
             self.tree.insert('','end','', values=(rule, self.rules[rule]))
 
+    #get settings from widgets and write to config.ini
     def action(self):
         if(self.checkVar.get() == 1):
             self.settings["base_path"] = self.basepath.get()
@@ -57,7 +60,8 @@ class GUIframe():
         with open("config.ini", "w") as configfile:
             self.config.write(configfile)
             configfile.close()
-    
+
+    #get directory and give to specified widget    
     def setDirectory(self, widget):
         filename = filedialog.askdirectory()
 
@@ -65,10 +69,13 @@ class GUIframe():
             widget.delete(0, END)
             widget.insert(0, filename)
 
+    #same as setDirectory, but for the path selector in the
+    #toplevel window
     def toplevelhelper(self):
         self.setDirectory(self.topPathEntry)
         self.top.focus()
 
+    #update state of loop interval field upon changing loop checkbox
     def checkChange(self):
         status = self.checkVar.get()
         if(status == 0):
@@ -78,6 +85,7 @@ class GUIframe():
             self.basepath.config(state="normal")
             self.basebutton.config(state="normal")
 
+    #update state of base path field upon changing its checkbox
     def loop_checkChange(self):
         status2 = self.checkVar2.get()
         if(status2 == 0):
@@ -85,40 +93,50 @@ class GUIframe():
         if(status2 == 1):
             self.loopInterval.config(state="normal")
 
+    #add values from toplevel to treebox
     def addAssoc(self):
         self.tree.insert('','end','', values=(self.topExtEntry.get(), self.topPathEntry.get()))
         self.topExtEntry.delete(0, END)
         self.topPathEntry.delete(0, END)
 
+    #remove selected treebox item
     def remover(self):
         self.selected_item = self.tree.selection()[0]
         self.tree.delete(self.selected_item)
 
+    #intialize and show toplevel window
     def toplevel(self):
+        
+        #create toplevel and initalize widgets
         self.top = Toplevel()
         self.topExtEntry = Entry(self.top)
         self.topPathEntry = Entry(self.top)
         self.topSubmit = Button(self.top, text="Submit", command=lambda: self.addAssoc())
         self.choosePath = Button(self.top, text="Select", command=self.toplevelhelper)
 
+        #create labels and grid widgets
         Label(self.top, text="Extension: ").grid(row=0, column=0, padx=5, pady=5)
         self.topExtEntry.grid(row=0, column=1, padx=5, pady=5)
         Label(self.top, text="Destination: ").grid(row=1, column=0, padx=5, pady=5)
         self.topPathEntry.grid(row=1, column=1, padx=5, pady=5)
         self.choosePath.grid(row=1, column=2, padx=5, pady=5)
         self.topSubmit.grid(row=2, column=1, padx=5, pady=5)
-
-        self.top.mainloop()
+        
+        self.top.mainloop()     #start toplevel
         
     
     def __init__(self):
+        #initialize configparser and read config.ini
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         self.settings = self.config['CONFIGURATION']
         self.rules = self.config['RULES']
-        
+
+        #initialize window
         self.frame = Tk()
         self.frame.title("Andrew's mover")
+
+        #intialize and add widgets
         self.basepath = Entry(state="disabled")
         self.basebutton = Button(state="disabled", text="Select", command=lambda: self.setDirectory(self.basepath))
         self.destpath = Entry()
@@ -144,6 +162,7 @@ class GUIframe():
         self.addbutton = Button(text="Add", command=lambda: self.toplevel())
         self.removebutton=Button(text="Remove", command=lambda: self.remover())
 
+        #create labels and grid widgets
         Label(text="Looping ").grid(row=0, column=1, padx=5, pady=5)
         self.loopcheck.grid(row=0, column=0, padx=5, pady=5)
         Label(text="Interval (secs): ").grid(row=0, column=2, padx=5, pady=5)
@@ -165,9 +184,10 @@ class GUIframe():
 
         self.saveButton.grid(sticky="we", row=5, column=1, columnspan=3, padx=5, pady=5)
 
-        self.ingest()
-        self.frame.mainloop()
+        self.ingest()   #run ingest method to get initial values from config.ini
+        self.frame.mainloop()   #start window
 
+#if class is run directly, create a GUIframe() object
 if __name__ == "__main__":
     g = GUIframe()
         
